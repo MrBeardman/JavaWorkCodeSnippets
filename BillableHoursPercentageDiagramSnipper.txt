@@ -1,0 +1,100 @@
+import de.jenomics.jst.core.AbstractDiagram;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import static java.awt.font.TextAttribute.FONT;
+import static java.lang.Math.round;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+/**
+ *
+ * @author elias.aumueller
+ */
+public class BillableHoursDiagram extends AbstractDiagram
+{	
+	
+	public static double round(double value, int places) {
+    if (places < 0) throw new IllegalArgumentException();
+
+    BigDecimal bd = BigDecimal.valueOf(value);
+    bd = bd.setScale(places, RoundingMode.HALF_UP);
+    return bd.doubleValue();
+}
+	
+@Override
+	protected void render(Graphics2D g2D, int width, int height, Object... data)
+	{
+		assert g2D != null;
+		//assert data[0] instanceof List;
+		
+		double[] hours = new double[3];
+		//convert the hours into an double array and delete the h and the %
+		for (int i = 0; i < data.length; i++){
+			String str = data[i].toString();
+			str = str.replace("h","");
+			str = str.replace("%","");
+			
+			double dou = Double.valueOf(str);
+			hours[i] = dou;
+		}
+		double hoursTotal = hours[0];
+		double hoursBillable = hours[1];
+		double hoursBillableShare = hours[2];
+		double hoursNonbillable = hours[0] - hours[1];
+		double hoursNonBillableShare = (hoursNonbillable /hoursTotal ) *100;
+		
+		
+		//the jenomics color codes from https://team18.jenomics.local/confluence/display/PROZ/JEN_1+Corporate+Design#JEN_1CorporateDesign-Farben
+		Color JBlue = new Color(12,130,192);
+		Color JGreen = new Color(86,198,87);
+		
+		//set Background
+		g2D.setColor(Color.white);
+		g2D.fillRect(0, 0, width, height + 5);
+		
+		int newWidth = width-10;
+		int newHeight = height-10;
+		
+		//non billable hours bar
+		g2D.setColor(JBlue);
+		g2D.fillRect(0, 25, (int)(hoursNonBillableShare)*2, newHeight / 3);// g2D.fillRect(10, 25, (int)(hours[0] - hours[1]), newHeight / 3);
+		
+		//billable hours bar
+		g2D.setColor(JGreen);
+		g2D.fillRect(0, (45+(newHeight / 3)), (int) hoursBillableShare*2, newHeight / 3); //g2D.fillRect(10, newHeight / 2, (int) hours[1], newHeight / 3);
+		
+		
+		g2D.setColor(Color.black);
+		
+		
+		//non billable hours text and Frame
+		g2D.drawString("n. fakt. Stunden:  " + (int) (hours[0] - hours[1]) + "h"+ " / "+ round(hoursNonBillableShare, 2) + "%", (int) (hoursNonBillableShare*2) + 50, ((newHeight/3)/2)+25);//Height of the bar devided by 2 and then +25 to center it
+		g2D.drawRect(0, 25, (int)(hoursNonBillableShare)*2, newHeight / 3);
+		
+		//billable hours text and Frame
+		g2D.drawString("fakt. Stunden:  " + (int) hours[1] + "h"+ " / "+ hoursBillableShare + "%", (int) (hoursBillableShare*2) + 50, (newHeight -((newHeight/3)/2)-25));//Height of the bar devided by 2 and then -25 to center it
+		g2D.drawRect(0, (45+(newHeight / 3)),(int) hoursBillableShare*2, newHeight / 3);
+		
+		
+		//draw outer lines
+		g2D.drawLine(0, 0, 0, height); //y-axis
+		g2D.drawLine(width/2, newHeight, 0, newHeight);//x-axis
+		
+		//set Font for the numbers
+		g2D.setFont(new Font("test", Font.PLAIN, 8));
+		
+		for (int j = 0; 11 > j; j++ ){
+			
+		g2D.drawLine(j*10*2, height - 12, j*10*2, height - 7); //vertical lines for nubers //*10 becasue we want 10/20 instead of 1/2 and *2 because the bars are *2
+		g2D.drawString(Integer.toString((j*10)), ((j*10)*2)-5, newHeight + 10); //Numbers
+		/*
+		if (iseven(j / 10)){
+		
+		}
+		/*else {
+		g2D.drawString(Integer.toString(j), j + 5, newHeight - 7);
+		}*/
+		}
+	}
+	}
